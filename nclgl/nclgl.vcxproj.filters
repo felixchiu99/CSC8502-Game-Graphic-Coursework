@@ -41,6 +41,8 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Light_Directional.cpp" />
     <ClCompile Include="Light_Spot.cpp" />
+    <ClCompile Include="ShaderList.cpp" />
+    <ClCompile Include="TextureList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -93,6 +95,8 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Light_Directional.h" />
     <ClInclude Include="Light_Spot.h" />
+    <ClInclude Include="ShaderList.h" />
+    <ClInclude Include="TextureList.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

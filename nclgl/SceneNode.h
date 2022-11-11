@@ -51,6 +51,9 @@ public:
 protected:
 	SceneNode * parent;
 	Mesh * mesh;
+	Shader* shader;
+	GLuint texture;
+
 	Matrix4 worldTransform;
 	Matrix4 transform;
 	Vector3 modelScale;
@@ -59,5 +62,4 @@ protected:
 
 	float distanceFromCamera;
 	float boundingRadius;
-	GLuint texture;
 };

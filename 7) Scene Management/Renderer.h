@@ -1,8 +1,9 @@
 #pragma once
-
 #include "../nclgl/OGLRenderer.h"
 #include "../nclgl/SceneNode.h"
 #include "../nclgl/Frustum.h"
+#include "../nclgl/ShaderList.h"
+#include "../nclgl/TextureList.h"
 class Camera;
 class SceneNode;
 class Mesh;
@@ -29,6 +30,8 @@ protected:
 	Mesh * cube;
 	Shader * shader;
 	GLuint texture;
+	ShaderList * shaderList;
+	TextureList textureList;
 
 	Frustum frameFrustum;
 

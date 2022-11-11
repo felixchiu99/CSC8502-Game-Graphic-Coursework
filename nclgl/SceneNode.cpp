@@ -3,6 +3,9 @@
 SceneNode::SceneNode(Mesh * mesh, Vector4 colour) {
 	this->mesh = mesh;
 	this->colour = colour;
+
+	//this->shader;
+	//this->texture;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 	boundingRadius = 1.0f;

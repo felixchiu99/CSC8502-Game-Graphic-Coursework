@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "../nclgl/CubeRobot.h"
 #include "../nclgl/Camera.h"
+//#include "../nclgl/ShaderList.h"
 #include <algorithm > //For std::sort ...
 
 Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
@@ -8,9 +9,15 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
 
-	shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
-	texture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
-	SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	shaderList = new ShaderList("default", "SceneVertex.glsl", "SceneFragment.glsl");
+	textureList = TextureList("default", SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
+		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0));
+	//shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
+	shader = (*shaderList).getShader("default");
+	//texture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
+		//SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	texture = textureList.getTexture("default");
+
 
 	if (!shader->LoadSuccess() || !texture) {
 		return;
@@ -46,7 +53,8 @@ Renderer ::~Renderer(void) {
 	delete quad;
 	delete camera;
 	delete cube;
-	delete shader;
+	//delete shader;
+	delete shaderList;
 	glDeleteTextures(1, &texture);
 }
 

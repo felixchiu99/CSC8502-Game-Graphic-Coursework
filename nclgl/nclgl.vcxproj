@@ -42,6 +42,8 @@
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="SceneNode.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShaderList.cpp" />
+    <ClCompile Include="TextureList.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +71,8 @@
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SceneNode.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderList.h" />
+    <ClInclude Include="TextureList.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />

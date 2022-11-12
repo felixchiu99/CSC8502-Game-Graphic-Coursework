@@ -11,7 +11,8 @@ in Vertex{
 out vec4 fragColour;
 void main(void) {
 	float blend = IN.colourBlend;
-	vec4 value = texture(diffuseTex, IN.texCoord)* blend + texture(diffuseTex2, IN.texCoord) * ((1-blend)*0.3) + IN.colour * ((1 - blend) * 0.7);
+	//vec4 value = texture(diffuseTex, IN.texCoord)* blend + texture(diffuseTex2, IN.texCoord) * ((1-blend)*0.3) + IN.colour * ((1 - blend) * 0.7);
+	vec4 value = texture(diffuseTex, IN.texCoord);
 	if (value.a == 0.0) {
 		discard;
 	}

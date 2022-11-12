@@ -5,7 +5,7 @@
 #include "../nclgl/Camera.h"
 #include "../nclgl/HeightMap.h"
 Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
+	heightMap = new HeightMap(TEXTUREDIR"ridgeTest.png",Vector3(16.0f,2.0f,16.0f));
 	texture = SOIL_load_OGL_texture(
 		TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
@@ -18,7 +18,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	SetTextureRepeating(texture, true);
 	Vector3 heightmapSize = heightMap->GetHeightmapSize();
 	camera = new Camera(-45.0f, 0.0f,
-		heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
+		heightmapSize * Vector3(0.5f, 2.0f, 0.5f));
 
 	//light = new Light(heightmapSize * Vector3(0.5f, 1.5f, 0.5f) + Vector3(0.0f, 50.0f, 0.0f),
 	//	Vector4(1, 1, 1, 1), heightmapSize.x * 0.5f);

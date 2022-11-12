@@ -28,6 +28,15 @@ class ShaderList
 			delete shaderMap[name];
 			this->shaderMap.erase(name);
 		};
+		bool shaderLoadError() {
+			for (auto const& x : shaderMap)
+			{
+				if (x.second != NULL)
+					if (!x.second->LoadSuccess())
+						return true;
+			}
+			return false;
+		};
 
 	private:
 		std::map<std::string, Shader *> shaderMap;	

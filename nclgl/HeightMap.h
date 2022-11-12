@@ -4,7 +4,7 @@
 
 class HeightMap : public Mesh {
 public:
-	HeightMap(const std::string & name);
+	HeightMap(const std::string & name, Vector3 vertexScale = Vector3(16.0f, 1.0f, 16.0f));
 	~HeightMap(void) {};
 	
 	Vector3 GetHeightmapSize() const { return heightmapSize; }

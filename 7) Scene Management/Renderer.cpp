@@ -122,17 +122,16 @@ void Renderer::DrawNode(SceneNode* n) {
 	if (n->GetMesh()) {
 		Matrix4 model = n->GetWorldTransform() *
 			Matrix4::Scale(n->GetModelScale());
-		glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(),
+		glUniformMatrix4fv(glGetUniformLocation(shaderList.getShader("default")->GetProgram(),
 			"modelMatrix"), 1, false, model.values);
 
-		glUniform4fv(glGetUniformLocation(shader->GetProgram(),
+		glUniform4fv(glGetUniformLocation(shaderList.getShader("default")->GetProgram(),
 			"nodeColour"), 1, (float*)& n->GetColour());
-		texture = n->GetTexture();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, n->GetTexture());
 
-		glUniform1i(glGetUniformLocation(shader->GetProgram(),
-			"useTexture"), texture);
+		glUniform1i(glGetUniformLocation(shaderList.getShader("default")->GetProgram(),
+			"useTexture"), n->GetTexture());
 		n->Draw(*this);
 	}
 }
@@ -142,10 +141,10 @@ void Renderer::RenderScene() {
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	BindShader(shader);
+	BindShader(shaderList.getShader("default"));
 	UpdateShaderMatrices();
 	
-	glUniform1i(glGetUniformLocation(shader->GetProgram(),
+	glUniform1i(glGetUniformLocation(shaderList.getShader("default")->GetProgram(),
 			"diffuseTex"), 0);
 	DrawNodes();
 	

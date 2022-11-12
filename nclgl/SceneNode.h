@@ -41,12 +41,12 @@ public:
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 	
-	void SetTexture(GLuint tex) { texture = tex; }
 	GLuint GetTexture() const { return texture; }
-
-	void SetShader(Shader* shader) { this->shader = shader; }
+	void SetTexture(GLuint tex) { texture = tex; }
+	
 	Shader* GetShader() const { return shader; }
-
+	void SetShader(Shader* shader) { this->shader = shader; }
+	
 	static bool CompareByCameraDistance(SceneNode * a, SceneNode * b) {
 		return (a->distanceFromCamera <
 			b->distanceFromCamera) ? true : false;

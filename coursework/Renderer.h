@@ -27,6 +27,7 @@ protected:
 	void DrawNodes();
 	void DrawNode(SceneNode* n);
 
+	void RenderNode();
 	void FillBuffers(); //G-Buffer Fill Render Pass
 	void DrawPointLights(); // Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
@@ -38,7 +39,6 @@ protected:
 	TextureList textureList;
 	MeshList meshList;
 	//END mesh, shaders, texture maps
-
 
 	Shader * sceneShader; // Shader to fill our GBuffers
 	Shader * pointlightShader; // Shader to calculate lighting
@@ -53,9 +53,10 @@ protected:
 	GLuint lightDiffuseTex; // Store diffuse lighting
 	GLuint lightSpecularTex; // Store specular lighting
 	HeightMap* heightMap; // Terrain!
+	Mesh* test;
 	Light * pointLights; // Array of lighting data
-	Mesh * sphere; // Light volume
-	Mesh * quad; //To draw a full -screen quad
+	Mesh * lightSphere; // Light volume
+	Mesh * screenQuad; //To draw a full -screen quad
 
 	Camera * camera; //Our usual camera
 	GLuint earthTex;

@@ -1,11 +1,12 @@
 #include "SceneNode.h"
 
-SceneNode::SceneNode(Mesh * mesh, Vector4 colour) {
+SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader, GLuint texture) {
 	this->mesh = mesh;
 	this->colour = colour;
 
-	//this->shader;
-	//this->texture;
+	this->shader = shader;
+	this->texture = texture;
+
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 	boundingRadius = 1.0f;

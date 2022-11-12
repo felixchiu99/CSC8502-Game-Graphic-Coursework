@@ -58,6 +58,7 @@ public:
 	void			SwapBuffers();
 
 	bool			HasInitialised() const;	
+
 	
 protected:
 	virtual void	Resize(int x, int y);	

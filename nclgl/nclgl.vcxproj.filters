@@ -43,6 +43,7 @@
     <ClCompile Include="Light_Spot.cpp" />
     <ClCompile Include="ShaderList.cpp" />
     <ClCompile Include="TextureList.cpp" />
+    <ClCompile Include="MeshList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -97,6 +98,7 @@
     <ClInclude Include="Light_Spot.h" />
     <ClInclude Include="ShaderList.h" />
     <ClInclude Include="TextureList.h" />
+    <ClInclude Include="MeshList.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

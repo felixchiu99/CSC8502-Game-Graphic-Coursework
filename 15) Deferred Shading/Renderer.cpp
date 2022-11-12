@@ -140,7 +140,7 @@ void Renderer::UpdateScene(float dt) {
 void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	FillBuffers();
-	DrawPointLights();
+	//DrawPointLights();
 	CombineBuffers();
 }
 void Renderer::FillBuffers() {

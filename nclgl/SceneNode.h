@@ -5,9 +5,10 @@
 #include "Mesh.h"
 #include <vector>
 
+
 class SceneNode {
 public:
-	SceneNode(Mesh * m = NULL, Vector4 colour = Vector4(1, 1, 1, 1));
+	SceneNode(Mesh * m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * shader = NULL, GLuint texture = NULL);
 	~SceneNode(void);
 	
 	void SetTransform(const Matrix4 & matrix) { transform = matrix; }
@@ -42,6 +43,9 @@ public:
 	
 	void SetTexture(GLuint tex) { texture = tex; }
 	GLuint GetTexture() const { return texture; }
+
+	void SetShader(Shader* shader) { this->shader = shader; }
+	Shader* GetShader() const { return shader; }
 
 	static bool CompareByCameraDistance(SceneNode * a, SceneNode * b) {
 		return (a->distanceFromCamera <

@@ -4,6 +4,7 @@
 #include "../nclgl/Frustum.h"
 #include "../nclgl/ShaderList.h"
 #include "../nclgl/TextureList.h"
+#include "../nclgl/MeshList.h"
 class Camera;
 class SceneNode;
 class Mesh;
@@ -26,12 +27,11 @@ protected:
 	
 	SceneNode * root;
 	Camera * camera;
-	Mesh * quad;
-	Mesh * cube;
 	Shader * shader;
 	GLuint texture;
-	ShaderList * shaderList;
+	ShaderList shaderList;
 	TextureList textureList;
+	MeshList meshList;
 
 	Frustum frameFrustum;
 

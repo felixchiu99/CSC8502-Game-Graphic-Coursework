@@ -1,19 +1,24 @@
 #include "Renderer.h"
 #include "../nclgl/CubeRobot.h"
 #include "../nclgl/Camera.h"
-//#include "../nclgl/ShaderList.h"
 #include <algorithm > //For std::sort ...
 
 Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	camera = new Camera(0.0f, 0.0f, (Vector3(0, 100, 750.0f)));
-	quad = Mesh::GenerateQuad();
-	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
+	shaderList = ShaderList();
+	textureList = TextureList();
+	meshList = MeshList();
+	meshList.addMesh("quad", Mesh::GenerateQuad());
+	meshList.addMesh("cube",Mesh::LoadFromMeshFile("OffsetCubeY.msh"));
 
-	shaderList = new ShaderList("default", "SceneVertex.glsl", "SceneFragment.glsl");
-	textureList = TextureList("default", SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
+	(&shaderList)->addShader("default", "SceneVertex.glsl", "SceneFragment.glsl");
+
+	(&textureList)->addTexture("default", SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
+		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0));
+	(&textureList)->addTexture("brick", SOIL_load_OGL_texture(TEXTUREDIR"brick.tga",
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0));
 	//shader = new Shader("SceneVertex.glsl", "SceneFragment.glsl");
-	shader = (*shaderList).getShader("default");
+	shader = shaderList.getShader("default");
 	//texture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga",
 		//SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
 	texture = textureList.getTexture("default");
@@ -32,12 +37,23 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 			Vector3(0, 100.0f, -300.0f + 100.0f + 100 * i)));
 		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
 		s->SetBoundingRadius(100.0f);
-		s->SetMesh(quad);
+		s->SetMesh(meshList.getMesh("quad"));
+		if(i == 4)
+			texture = textureList.getTexture("brick");
 		s->SetTexture(texture);
 		root->AddChild(s);
 	}
+	SceneNode* s2 = new SceneNode();
+	s2->SetColour(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+	s2->SetTransform(Matrix4::Translation(
+		Vector3(0, 100.0f, -300.0f + 100.0f + 100 * 5)));
+	s2->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+	s2->SetBoundingRadius(100.0f);
+	s2->SetMesh(meshList.getMesh("cube"));
+	s2->SetTexture(texture);
+	root->AddChild(s2);
 
-	root->AddChild(new CubeRobot(cube));
+	root->AddChild(new CubeRobot(meshList.getMesh("cube")));
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f,
 			(float)width / (float)height, 45.0f);
@@ -50,11 +66,8 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 
 Renderer ::~Renderer(void) {
 	delete root;
-	delete quad;
 	delete camera;
-	delete cube;
 	//delete shader;
-	delete shaderList;
 	glDeleteTextures(1, &texture);
 }
 

@@ -5,7 +5,8 @@
 #include "../nclgl/Camera.h"
 #include "../nclgl/HeightMap.h"
 Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"ridgeTest.png",Vector3(16.0f,2.0f,16.0f));
+	//heightMap = new HeightMap(TEXTUREDIR"ridgeTest.png",Vector3(16.0f,2.0f,16.0f));
+	heightMap = new HeightMap(TEXTUREDIR"ridge300mod.png",Vector3(24.0f,2.0f,24.0f));
 	texture = SOIL_load_OGL_texture(
 		TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);

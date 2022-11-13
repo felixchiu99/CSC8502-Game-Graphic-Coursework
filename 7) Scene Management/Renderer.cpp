@@ -53,7 +53,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	s2->SetTexture(texture);
 	root->AddChild(s2);
 
-	root->AddChild(new CubeRobot(meshList.getMesh("cube")));
+	root->AddChild(new CubeRobot(meshList.getMesh("cube"), shaderList.getShader("default")));
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f,
 			(float)width / (float)height, 45.0f);

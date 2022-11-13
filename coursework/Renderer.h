@@ -55,8 +55,10 @@ protected:
 	HeightMap* heightMap; // Terrain!
 	Mesh* test;
 	Light * pointLights; // Array of lighting data
+	Light* directionLight;
 	Mesh * lightSphere; // Light volume
 	Mesh * screenQuad; //To draw a full -screen quad
+	Matrix4 projMatrixOriginal;
 
 	Camera * camera; //Our usual camera
 	GLuint earthTex;

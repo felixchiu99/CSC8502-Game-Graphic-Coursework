@@ -6,8 +6,8 @@
 class Light {
 public:
 	Light() {} // Default constructor , we’ll be needing this later!
-	Light(const Vector3 & position, const Vector4 & colour, float radius, int type = 0) {
-		this->type = type;
+	Light(const Vector3 & position, const Vector4 & colour, float radius) {
+		this->type = 0;
 		this->position = position;
 		this->colour = colour;
 		this->radius = radius;

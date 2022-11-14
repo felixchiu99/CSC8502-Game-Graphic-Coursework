@@ -1,17 +1,17 @@
 #include "SceneNode.h"
 
-SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , GLuint texture) {
+SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , GLuint texture, GLuint bumpMap) {
 	this->mesh = mesh;
 	this->colour = colour;
 
 	this->shader = shader;
-	this->texture = texture;
+	textureList.push_back(texture);
+	this->bumpMap = bumpMap;
 
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
-	texture = 0;
 }
 
 SceneNode ::~SceneNode(void) {

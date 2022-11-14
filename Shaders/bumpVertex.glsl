@@ -1,7 +1,7 @@
 #version 330 core
 
 layout(std140) uniform ObjectMatrices{
-	mat4 mvp[3]; //model, view, proj
+	mat4 mvp[5]; //model, view, proj
 };
 
 uniform mat4 modelMatrix;

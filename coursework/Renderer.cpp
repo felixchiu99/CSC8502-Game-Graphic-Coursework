@@ -43,6 +43,9 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	textureList.addTexture("earthBump", SOIL_load_OGL_texture(
 		TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO,
 		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+	textureList.addTexture("normal", SOIL_load_OGL_texture(
+		TEXTUREDIR"normal.png", SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
 
 	earthTex = textureList.getTexture("earthTex");
 	
@@ -57,6 +60,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	root = new SceneNode();
 
 	SceneNode * r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("heightMap"), textureList.getTexture("brickTex"));
+	//SceneNode * r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("heightMap"));
 	r->SetTransform(Matrix4::Translation(
 		Vector3(heightmapSize * Vector3(0.5f, 0.0f, 0.5f) + Vector3(0.0f, 100.0f, 0.0f))));
 	r->SetModelScale(Vector3(20.0, 20.0, 20.0));
@@ -70,7 +74,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	r->SetModelScale(Vector3 (20.0, 20.0, 20.0));
 	root->AddChild(r);
 
-	SceneNode * heightMapScene = new SceneNode(heightMap, Vector4(1.0,1.0,1.0,1.0), shaderList.getShader("heightMap"), textureList.getTexture("earthTex"));
+	SceneNode * heightMapScene = new SceneNode(heightMap, Vector4(1.0,1.0,1.0,1.0), shaderList.getShader("heightMap"), textureList.getTexture("earthTex"),textureList.getTexture("earthBump"));
 	heightMapScene->SetBoundingRadius(heightmapSize.x * 2);
 	root->AddChild(heightMapScene);
 
@@ -223,38 +227,8 @@ void Renderer::RenderNode() {
 	ClearNodeLists();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-/*
+
 void Renderer::FillBuffers() {
-	//std::cout << "d" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-	BindShader(sceneShader);
-	glUniform1i(
-		glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
-	glUniform1i(
-		glGetUniformLocation(sceneShader->GetProgram(), "bumpTex"), 1);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, earthTex);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, earthBump);
-
-	modelMatrix.ToIdentity();
-	viewMatrix = camera->BuildViewMatrix();
-	projMatrix = projMatrixOriginal;
-
-	UpdateShaderMatrices();
-
-	//heightMap->Draw();
-	RenderNode();
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-*/
-void Renderer::FillBuffers() {
-	//std::cout << "d" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	modelMatrix.ToIdentity();
@@ -398,15 +372,13 @@ void Renderer::DrawNode(SceneNode* n) {
 			"nodeColour"), 1, (float*)& n->GetColour());
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, n->GetTexture());
-		//glBindTexture(GL_TEXTURE_2D, earthTex);
+
+		int useBump = n->GetBumpMap()==0?0:1;
 
 		glUniform1i(
-			glGetUniformLocation(shader->GetProgram(), "bumpTex"), 1);
+			glGetUniformLocation(shader->GetProgram(), "bumpTex"), useBump);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, earthBump);
-
-		glUniform1i(glGetUniformLocation(shader->GetProgram(),
-			"useTexture"), n->GetTexture());
+		glBindTexture(GL_TEXTURE_2D, n->GetBumpMap());
 
 
 		n->Draw(*this);

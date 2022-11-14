@@ -24,6 +24,4 @@ void main(void) {
 
 	fragColour[0] = texture2D(diffuseTex, IN.texCoord);
 	fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0);
-	//if (IN.texCoord == NULL)
-	//	fragColour[0] = vec4(1, 0, 0, 1);
 }

@@ -38,11 +38,14 @@ public:
 	float GetBoundingRadius() const { return boundingRadius; }
 	void SetBoundingRadius(float f) { boundingRadius = f; }
 
+	int GetRenderPrior() const { return renderPrior; }
+	void SetRenderPrior(int p) { renderPrior = p; }
+
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 	GLuint GetTexture() { return textureList.front(); }
 	std::vector<GLuint> * GetTextureList() { return &textureList; }
-	void SetTexture(GLuint tex) {
+	void AddTexture(GLuint tex) {
 		textureList.push_back(tex);
 	}
 	
@@ -54,6 +57,21 @@ public:
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* shader) { this->shader = shader;}
 	
+
+	Light* GetLight() const { return light; }
+	void AddLight(Vector4 Colour, float radius) {
+		this->light = new Light;
+		this->light->SetColour(Colour);
+		this->light->SetRadius(radius);
+	}
+	void SetLightPos(Vector3 pos) {
+		this->light->SetPosition(pos);
+	}
+	void DeleteLight() {
+		delete light;
+	}
+
+
 	static bool CompareByCameraDistance(SceneNode * a, SceneNode * b) {
 		return (a->distanceFromCamera <
 			b->distanceFromCamera) ? true : false;
@@ -63,6 +81,7 @@ protected:
 	SceneNode * parent;
 	Mesh * mesh;
 	Shader* shader;
+	Light* light;
 	std::vector<GLuint> textureList;
 	GLuint bumpMap;
 
@@ -74,4 +93,5 @@ protected:
 
 	float distanceFromCamera;
 	float boundingRadius;
+	int renderPrior; // 0 deferred, 1 unlit, 
 };

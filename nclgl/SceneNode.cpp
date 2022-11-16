@@ -1,13 +1,15 @@
 #include "SceneNode.h"
 
 SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , GLuint texture, GLuint bumpMap) {
+	this->renderPrior = 0;
+
 	this->mesh = mesh;
 	this->colour = colour;
 
 	this->shader = shader;
 	textureList.push_back(texture);
 	this->bumpMap = bumpMap;
-
+	this->light = NULL;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 	boundingRadius = 1.0f;
@@ -15,6 +17,10 @@ SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , GLuint textu
 }
 
 SceneNode ::~SceneNode(void) {
+	if (light != NULL) {
+		delete light;
+		light = NULL;
+	}
 	for (unsigned int i = 0; i < children.size(); ++i) {
 		delete children[i];
 	}

@@ -24,15 +24,17 @@ protected:
 	void BuildNodeLists(SceneNode* from);
 	void SortNodeLists();
 	void ClearNodeLists();
-	void DrawNodes();
+	void DrawNodes(vector <SceneNode*>* RenderNodeList);
 	void DrawNode(SceneNode* n);
 
 	void DrawSkybox();
 	void DrawWater();
 
-	void RenderNode();
+	void RenderNode(vector <SceneNode*>* RenderNodeList);
 	void FillBuffers(); //G-Buffer Fill Render Pass
-	void DrawPointLights(); // Lighting Render Pass
+	void DrawLights(); // Lighting Render Pass
+	void DrawPointLights(); // Point Lighting Render Pass
+	void DrawDirectionalLights(); // Directional Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
 	//Make a new texture ...
 	void GenerateScreenTexture(GLuint & into, bool depth = false);
@@ -45,6 +47,7 @@ protected:
 
 	Shader * sceneShader; // Shader to fill our GBuffers
 	Shader * pointlightShader; // Shader to calculate lighting
+	Shader * directionalLightShader; // Shader to calculate directional lighting
 	Shader * combineShader; // shader to stick it all together
 
 	GLuint bufferFBO; //FBO for our G-Buffer pass
@@ -56,7 +59,6 @@ protected:
 	GLuint lightDiffuseTex; // Store diffuse lighting
 	GLuint lightSpecularTex; // Store specular lighting
 	HeightMap* heightMap; // Terrain!
-	Mesh* test;
 	Light * pointLights; // Array of lighting data
 	Light* directionLight;
 	Mesh * lightSphere; // Light volume
@@ -72,11 +74,15 @@ protected:
 
 	//scenenode related
 	SceneNode* root;
+	SceneNode* unlitRoot;
+	SceneNode* test;
 
 	Frustum frameFrustum;
 
 	vector <SceneNode*> transparentNodeList;
 	vector <SceneNode*> nodeList;
+	vector <SceneNode*> unlitNodeList;
+	vector <SceneNode*> lightNodeList;
 	// END scenenode related
 
 

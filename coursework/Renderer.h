@@ -27,6 +27,9 @@ protected:
 	void DrawNodes();
 	void DrawNode(SceneNode* n);
 
+	void DrawSkybox();
+	void DrawWater();
+
 	void RenderNode();
 	void FillBuffers(); //G-Buffer Fill Render Pass
 	void DrawPointLights(); // Lighting Render Pass
@@ -59,6 +62,9 @@ protected:
 	Mesh * lightSphere; // Light volume
 	Mesh * screenQuad; //To draw a full -screen quad
 	Matrix4 projMatrixOriginal;
+
+	GLuint skyboxFBO;
+	GLuint skyboxTex;
 
 	Camera * camera; //Our usual camera
 	GLuint earthTex;

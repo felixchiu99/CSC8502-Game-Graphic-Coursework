@@ -8,14 +8,14 @@ public:
 		yaw = 0.0f;
 		pitch = 0.0f;
 		row = 0.0f;
-		moveSpeed = 15.0f;
+		moveSpeed = 1000.0f;
 	};
 	Camera(float pitch, float yaw, Vector3 position) {
 		this->pitch = pitch;
 		this->yaw = yaw;
 		this->position = position;
 		row = 0.0f;
-		moveSpeed = 15.0f;
+		moveSpeed = 1000.0f;
 	}
 	~Camera(void) {};
 	void UpdateCamera(float dt = 1.0f);

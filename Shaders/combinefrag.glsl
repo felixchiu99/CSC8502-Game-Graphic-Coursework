@@ -9,11 +9,17 @@ in Vertex{
 
 out vec4 fragColour;
 
+
 void main(void) {
 	vec3 diffuse = texture(diffuseTex, IN.texCoord).xyz;
+	float alpha = texture(diffuseTex, IN.texCoord).a;
 	vec3 light = texture(diffuseLight, IN.texCoord).xyz;
 	vec3 specular = texture(specularLight, IN.texCoord).xyz;
-
+	if(alpha != 1){
+		fragColour.xyz = diffuse.xyz;
+		fragColour.a = 1.0;
+		return;
+	}
 	fragColour.xyz = diffuse * 0.1; // ambient
 	fragColour.xyz += diffuse * light; // lambert
 	fragColour.xyz += specular; // Specular

@@ -22,7 +22,7 @@ void Camera::UpdateCamera(float dt) {
 		moveSpeed += dt * 100;
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_F)) {
-		moveSpeed -= moveSpeed >0 ? dt * 100:0;
+		moveSpeed -= moveSpeed >0 ? dt * 1000:0;
 	}
 
 	float speed = moveSpeed * dt;
@@ -45,16 +45,18 @@ void Camera::UpdateCamera(float dt) {
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) {
 		position.y -= speed;
 	}
+	/*
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) {
 		row -= 1;
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_E)) {
 		row += 1;
 	}
+	*/
 }
 Matrix4 Camera::BuildViewMatrix() {
 	return Matrix4::Rotation(-pitch, Vector3(1, 0, 0)) *
-		Matrix4::Rotation(-yaw, Vector3(0, 1, 0)) *
 		Matrix4::Rotation(-row, Vector3(0, 0, 1)) *
+		Matrix4::Rotation(-yaw, Vector3(0, 1, 0)) *
 		Matrix4::Translation(-position);
 };

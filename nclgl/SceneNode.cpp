@@ -1,14 +1,14 @@
 #include "SceneNode.h"
 
-SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , GLuint texture, GLuint bumpMap) {
+
+SceneNode::SceneNode(Mesh * mesh, Vector4 colour, Shader * shader , TextureWBump* textures) {
 	this->renderPrior = 0;
 
 	this->mesh = mesh;
 	this->colour = colour;
 
 	this->shader = shader;
-	textureList.push_back(texture);
-	this->bumpMap = bumpMap;
+	textureList.push_back(textures);
 	this->light = NULL;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);

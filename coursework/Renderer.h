@@ -19,6 +19,13 @@ public:
 	void RenderScene() override;
 	void UpdateScene(float dt) override;
 
+	void ToggleBlur() {
+		usingBlur = !usingBlur;
+	};
+	void ToggleFreeLook() {
+		usingFreeLook = !usingFreeLook;
+	};
+
 protected:
 	//NodeLists
 	void BuildNodeLists(SceneNode* from);
@@ -26,6 +33,10 @@ protected:
 	void ClearNodeLists();
 	void DrawNodes(vector <SceneNode*>* RenderNodeList);
 	void DrawNode(SceneNode* n);
+	void DrawAnimatedNodes();
+	void DrawCharacter(SceneNode* n);
+
+	void DrawTerrain(SceneNode* n);
 
 	void DrawSkybox();
 	void DrawWater();
@@ -36,6 +47,16 @@ protected:
 	void DrawPointLights(); // Point Lighting Render Pass
 	void DrawDirectionalLights(); // Directional Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
+	void DrawPostProcess(); //post process pass
+	void CombinePostProcessScene();
+
+	void SetTrack();
+	void MoveCamera(float dt);
+
+	//toggle effect
+	bool usingBlur;
+	bool usingFreeLook;
+
 	//Make a new texture ...
 	void GenerateScreenTexture(GLuint & into, bool depth = false);
 	
@@ -68,6 +89,9 @@ protected:
 	GLuint skyboxFBO;
 	GLuint skyboxTex;
 
+	GLuint processFBO;
+	GLuint postBufferColourTex;
+
 	Camera * camera; //Our usual camera
 	GLuint earthTex;
 	GLuint earthBump;
@@ -75,6 +99,7 @@ protected:
 	//scenenode related
 	SceneNode* root;
 	SceneNode* unlitRoot;
+	SceneNode* terrain;
 	SceneNode* test;
 
 	Frustum frameFrustum;
@@ -82,9 +107,11 @@ protected:
 	vector <SceneNode*> transparentNodeList;
 	vector <SceneNode*> nodeList;
 	vector <SceneNode*> unlitNodeList;
+	vector <SceneNode*> animatedCharacterList;
 	vector <SceneNode*> lightNodeList;
 	// END scenenode related
 
-
-
+	//camera track
+	vector <Vector3> trackCheckpoint;
+	int nextIndex;
 };

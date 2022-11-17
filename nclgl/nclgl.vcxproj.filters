@@ -45,6 +45,9 @@
     <ClCompile Include="TextureList.cpp" />
     <ClCompile Include="MeshList.cpp" />
     <ClCompile Include="ParticleGenerator.cpp" />
+    <ClCompile Include="nodeCharacter.cpp" />
+    <ClCompile Include="TextureWBump.cpp" />
+    <ClCompile Include="CameraTrack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -101,6 +104,9 @@
     <ClInclude Include="TextureList.h" />
     <ClInclude Include="MeshList.h" />
     <ClInclude Include="ParticleGenerator.h" />
+    <ClInclude Include="nodeCharacter.h" />
+    <ClInclude Include="TextureWBump.h" />
+    <ClInclude Include="CameraTrack.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

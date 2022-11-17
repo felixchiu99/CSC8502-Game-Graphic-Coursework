@@ -5,10 +5,12 @@
 #include "Mesh.h"
 #include <vector>
 
+#include "TextureWBump.h"
+
 
 class SceneNode {
 public:
-	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader* shader = NULL, GLuint texture = NULL, GLuint bumpMap = NULL);
+	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader* shader = NULL, TextureWBump* textures = NULL);
 	~SceneNode(void);
 	
 	void SetTransform(const Matrix4 & matrix) { transform = matrix; }
@@ -43,17 +45,15 @@ public:
 
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
-	GLuint GetTexture() { return textureList.front(); }
-	std::vector<GLuint> * GetTextureList() { return &textureList; }
-	void AddTexture(GLuint tex) {
-		textureList.push_back(tex);
+	GLuint GetTexture() { return textureList.front()->getTexture(); }
+	GLuint GetTexture(int index) { return textureList[index]->getTexture(); }
+	std::vector<TextureWBump*> * GetTextureList() { return &textureList; }
+	void AddTexture(TextureWBump* pair) {
+		textureList.push_back(pair);
 	}
 	
-	GLuint GetBumpMap() const { return bumpMap; }
-	void SetBumpMap(GLuint bump) {
-		bumpMap = bump;
-	}
-	
+	GLuint GetBumpMap() const { return textureList.front()->getBumpMap(); }
+	GLuint GetBumpMap(int index) const { return textureList[index]->getBumpMap(); }
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* shader) { this->shader = shader;}
 	
@@ -82,8 +82,7 @@ protected:
 	Mesh * mesh;
 	Shader* shader;
 	Light* light;
-	std::vector<GLuint> textureList;
-	GLuint bumpMap;
+	std::vector<TextureWBump*> textureList;
 
 	Matrix4 worldTransform;
 	Matrix4 transform;
@@ -93,5 +92,5 @@ protected:
 
 	float distanceFromCamera;
 	float boundingRadius;
-	int renderPrior; // 0 deferred, 1 unlit, 
+	int renderPrior; // 0 deferred, 1 unlit, 2 animated character
 };

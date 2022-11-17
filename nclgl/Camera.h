@@ -9,6 +9,7 @@ public:
 		pitch = 0.0f;
 		row = 0.0f;
 		moveSpeed = 1000.0f;
+		usingFreeLook = false;
 	};
 	Camera(float pitch, float yaw, Vector3 position) {
 		this->pitch = pitch;
@@ -16,6 +17,7 @@ public:
 		this->position = position;
 		row = 0.0f;
 		moveSpeed = 1000.0f;
+		usingFreeLook = false;
 	}
 	~Camera(void) {};
 	void UpdateCamera(float dt = 1.0f);
@@ -30,10 +32,15 @@ public:
 	float GetRow() const { return row; }
 	void SetRow(float r) { pitch = r; }
 
+	float GetMoveSpeed() const { return moveSpeed; }
+
+	void setFreeLook(bool free) { usingFreeLook = free; }
+
 protected:
 	float yaw;
 	float pitch;
 	float row;
 	float moveSpeed;
+	bool usingFreeLook;
 	Vector3 position; //Set to 0,0,0 by Vector3 constructor ;)
 };

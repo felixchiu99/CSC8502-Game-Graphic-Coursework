@@ -2,15 +2,19 @@
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/Camera.h"
 #include "../nclgl/Light.h"
-#include "../nclgl/CubeRobot.h"
 #include "../nclgl/Light_Directional.h"
+#include "../nclgl/nodeCharacter.h"
 #include <algorithm > //For std::sort ...
 
 const int LIGHT_NUM = 10;
 const float RENDER_DIST = 10000.0f;
-
+const int POST_PASSES = 10;
 
 Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
+	usingBlur = false;
+	usingFreeLook = false;
+	nextIndex = 0;
+	SetTrack();
 	shaderList = ShaderList();
 	textureList = TextureList();
 	meshList = MeshList();
@@ -22,7 +26,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		meshList.addMesh("cylinder", Mesh::LoadFromMeshFile("Cylinder.msh"));
 		meshList.addMesh("cone", Mesh::LoadFromMeshFile("Cone.msh"));
 		meshList.addMesh("tree", Mesh::LoadFromMeshFile("green_leaf_tree.msh"));
-
+		meshList.addMesh("man01", Mesh::LoadFromMeshFile("Role_T.msh"));
 	}
 	{
 		shaderList.addShader("sceneNode", "bumpVertex.glsl", "bufferFragment.glsl");
@@ -36,50 +40,87 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		shaderList.addShader("skybox", "skyboxVertex.glsl", "skyboxFragmentDeferred.glsl");
 		shaderList.addShader("water", "reflectVertex.glsl", "reflectFragment.glsl");
 		shaderList.addShader("particle", "particleVertex.glsl", "particleFrag.glsl");
+		shaderList.addShader("man01", "SkinningVertex.glsl", "texturedFragment.glsl");
+		shaderList.addShader("processShader", "TexturedVertex.glsl", "processfrag.glsl");
+		shaderList.addShader("processCombineShader", "TexturedVertex.glsl","TexturedFragment.glsl");
 	}
 	{
-		textureList.addTexture("earthTex", SOIL_load_OGL_texture(
+		textureList.addTexture("earth", SOIL_load_OGL_texture(
 			TEXTUREDIR"Barren Reds.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
-		textureList.addTexture("earthBump", SOIL_load_OGL_texture(
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			SOIL_load_OGL_texture(
 			TEXTUREDIR"Barren RedsDOT3.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+		);
 
-		textureList.addTexture("treeStemTex", SOIL_load_OGL_texture(
+		textureList.addTexture("treeStem", SOIL_load_OGL_texture(
 			TEXTUREDIR"tree_stem1_Base_Color.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
-		textureList.addTexture("treeStemBump", SOIL_load_OGL_texture(
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			SOIL_load_OGL_texture(
 			TEXTUREDIR"tree_stem1_Normal_OpenGL.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+		);
+		SetTextureRepeating(textureList.getTexture("treeStem"), true);
+		SetTextureRepeating(textureList.getBumpMap("treeStem"), true);
+
+		textureList.addTexture("gravel", SOIL_load_OGL_texture(
+			TEXTUREDIR"Gravel01.PNG",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			SOIL_load_OGL_texture(
+			TEXTUREDIR"Gravel01Norm.PNG",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+		);
+		SetTextureRepeating(textureList.getTexture("gravel"), true);
+		SetTextureRepeating(textureList.getBumpMap("gravel"), true);
+
+		textureList.addTexture("sand", SOIL_load_OGL_texture(
+			TEXTUREDIR"Sand.PNG",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			SOIL_load_OGL_texture(
+				TEXTUREDIR"SandNorm.PNG",
+				SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+		);
+		SetTextureRepeating(textureList.getTexture("sand"), true);
+		SetTextureRepeating(textureList.getBumpMap("sand"), true);
+
+
 		textureList.addTexture("leafTex", SOIL_load_OGL_texture(
 			TEXTUREDIR"Leaf_colour.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			NULL
+		);
 		textureList.addTexture("leafAlphaTex", SOIL_load_OGL_texture(
 			TEXTUREDIR"Leaf_alpha.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			NULL
+		);
 
 
 		textureList.addTexture("brickTex", SOIL_load_OGL_texture(
 			TEXTUREDIR"brick.tga",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
-		textureList.addTexture("normal", SOIL_load_OGL_texture(
-			TEXTUREDIR"normal.png", 
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			NULL
+		);
 		textureList.addTexture("skybox", SOIL_load_OGL_cubemap(
 			TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
 			TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
 			TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg",
-			SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0));
+			SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0),
+			NULL
+		);
 		textureList.addTexture("water", SOIL_load_OGL_texture(
 			TEXTUREDIR"water.TGA",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS));
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			NULL
+		);
 	}
+
 
 	lightSphere = meshList.getMesh("sphere");
 	screenQuad = meshList.getMesh("quad");
 
-	earthTex = textureList.getTexture("earthTex");
-	earthBump = textureList.getTexture("earthBump");
+	earthTex = textureList.getTexture("earth");
+	earthBump = textureList.getBumpMap("earth");
 
 	SetTextureRepeating(earthTex, true);
 	SetTextureRepeating(earthBump, true);
@@ -93,37 +134,38 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		root = new SceneNode();
 		unlitRoot = new SceneNode();
 
-		SceneNode* r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 0.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("brickTex"));
+		SceneNode* r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 0.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("gravel"));
 		//SceneNode * r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("heightMap"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3( 0.0f, 100.0f, 0.0f)));
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		r->SetBoundingRadius(RENDER_DIST);
+		r->SetRenderPrior(1);
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("earthTex"));
+		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3(0.0f, 100.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("cone"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("earthTex"));
+		r = new SceneNode(meshList.getMesh("cone"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3( 50.0f, 100.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("treeStemTex"), textureList.getTexture("treeStemBump"));
-		r->AddTexture(textureList.getTexture("leafTex"));
+		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("treeStem"));
+		r->AddTexture(textureList.getTexturePair("leafTex"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3( 0.0f, 220.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("earthTex"));
+		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3( 0.0f, 220.0f, 400.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
@@ -132,7 +174,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		//r->SetRenderPrior(1);
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexture("earthTex"));
+		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3(100.0f, 220.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
@@ -141,10 +183,21 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		r->SetRenderPrior(1);
 		root->AddChild(r);
 
-		SceneNode* heightMapScene = new SceneNode(heightMap, Vector4(1.0, 1.0, 1.0, 1.0), shaderList.getShader("sceneNode"), textureList.getTexture("earthTex"), textureList.getTexture("earthBump"));
+		r = new nodeCharacter("Role_T.anm", "Role_T.mat", meshList.getMesh("man01"), shaderList.getShader("man01"));
+		r->SetTransform(Matrix4::Translation(
+			Vector3(100.0f, 220.0f, 0.0f)));
+		r->SetBoundingRadius(RENDER_DIST);
+		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
+		r->AddLight(Vector4(0.5, 0.5, 1, 1), 250);
+		r->SetRenderPrior(2);
+		root->AddChild(r);
+
+		SceneNode* heightMapScene = new SceneNode(heightMap, Vector4(1.0, 1.0, 1.0, 1.0), shaderList.getShader("terrain"),  textureList.getTexturePair("earth"));
+		heightMapScene->AddTexture(textureList.getTexturePair("gravel"));
 		heightMapScene->SetTransform(Matrix4::Translation(
 			Vector3(heightmapSize* Vector3(-0.5f, 0.0f,-0.5f))));
 		heightMapScene->SetBoundingRadius(heightmapSize.x * 2);
+		heightMapScene->SetRenderPrior(-1);
 		root->AddChild(heightMapScene);
 
 	}
@@ -152,8 +205,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		(float)width / (float)height, 45.0f);
 	projMatrix = projMatrixOriginal;
 
-	camera = new Camera(-45.0f, 0.0f,
-			heightmapSize * Vector3(0.0f, 3.0f, 0.0f));
+	camera = new Camera(-7.0f, 188.0f, Vector3(-168, 212, -1261));
 	pointLights = new Light[LIGHT_NUM+1];
 
 	for (int i = 0; i < LIGHT_NUM; ++i) {
@@ -185,6 +237,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
+	glGenFramebuffers(1, &processFBO);//And do post processing in this
 	
 	GLenum buffers[2] = {
 		GL_COLOR_ATTACHMENT0 ,
@@ -209,6 +262,16 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		GL_TEXTURE_2D, bufferDepthTex, 0);
 	glDrawBuffers(2, buffers);
 	
+	//And our post process colour texture ...
+	glGenTextures(1, &postBufferColourTex);
+	glBindTexture(GL_TEXTURE_2D, postBufferColourTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
 			GL_FRAMEBUFFER_COMPLETE) {
 		return;
@@ -239,16 +302,20 @@ Renderer ::~Renderer(void) {
 	delete root;
 	delete camera;
 	delete[] pointLights;
+
 	glDeleteTextures(1, &bufferColourTex);
 	glDeleteTextures(1, &bufferNormalTex);
 	glDeleteTextures(1, &bufferDepthTex);
 	glDeleteTextures(1, &lightDiffuseTex);
 	glDeleteTextures(1, &lightSpecularTex);
+	glDeleteTextures(1, &postBufferColourTex);
 
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
-
+	glDeleteFramebuffers(1, &processFBO);
 }
+
+
 void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glGenTextures(1, &into);
 	glBindTexture(GL_TEXTURE_2D, into);
@@ -267,11 +334,42 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 void Renderer::UpdateScene(float dt) {
+	camera->setFreeLook(usingFreeLook);
 	camera->UpdateCamera(dt);
 	viewMatrix = camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
 	root->Update(dt);
+
+	std::cout <<"pos "<< camera->GetPosition() << std::endl;
+	std::cout <<"Yaw "<< camera->GetYaw() << std::endl;
+	std::cout <<"Pitch "<< camera->GetPitch() << std::endl;
+
+	if(!usingFreeLook)
+		MoveCamera(dt);
+}
+void Renderer::SetTrack() {
+	trackCheckpoint.push_back(Vector3(-168, 212, -1261));
+	trackCheckpoint.push_back(Vector3(-109.158, 245.07, 1001.02));
+}
+void Renderer::MoveCamera(float dt) {
+	float camSpeed = 3;
+	Vector3 targetPos = trackCheckpoint[nextIndex];
+	Vector3 currentPos = camera->GetPosition();
+	Vector3 next = targetPos - currentPos; 
+	float dist = next.Length();
+	std::cout << next.Length() << std::endl;
+	next = next.Normalised();
+	if(dt<0.05)
+		next = next * camSpeed;
+	else
+		next = next * 0.01;
+	if(dist > 1)
+		camera->SetPosition(currentPos + next );
+	else {
+		if (nextIndex < trackCheckpoint.size() - 1)
+			nextIndex++;
+	}
 }
 
 void Renderer::RenderScene() {
@@ -290,13 +388,20 @@ void Renderer::RenderScene() {
 		0, 0, width, height,
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	viewMatrix = camera->BuildViewMatrix();
 	projMatrix = projMatrixOriginal;
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
 	RenderNode(&unlitNodeList);
 
+	if (usingBlur) {
+		DrawPostProcess();
+		CombinePostProcessScene();
+	}
+
 	ClearNodeLists();
+
 }
 //*/
 void Renderer::DrawSkybox() {
@@ -338,6 +443,7 @@ void Renderer::DrawWater() {
 	meshList.getMesh("quad")->Draw();
 }
 
+
 void Renderer::RenderNode(vector <SceneNode*> *RenderNodeList) {
 	viewMatrix = camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
@@ -360,7 +466,11 @@ void Renderer::FillBuffers() {
 
 	DrawSkybox();
 
+	DrawTerrain(terrain);
+
 	RenderNode(&nodeList);
+
+	DrawAnimatedNodes();
 
 	DrawWater();
 
@@ -481,6 +591,57 @@ void Renderer::CombineBuffers() {
 	screenQuad->Draw();
 
 }
+///*
+void Renderer::DrawPostProcess() {
+	glBindFramebuffer(GL_FRAMEBUFFER, processFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D, postBufferColourTex, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	Shader* processShader = shaderList.getShader("processShader");
+	BindShader(processShader);
+	modelMatrix.ToIdentity();
+	viewMatrix.ToIdentity();
+	projMatrix.ToIdentity();
+	UpdateShaderMatrices();
+
+	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(
+		processShader->GetProgram(), "sceneTex"), 0);
+	for (int i = 0; i < POST_PASSES; ++i) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D, postBufferColourTex, 0);
+		glUniform1i(glGetUniformLocation(processShader->GetProgram(),
+			"isVertical"), 0);
+		glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+		screenQuad->Draw();
+		//Now to swap the colour buffers , and do the second blur pass
+		glUniform1i(glGetUniformLocation(processShader->GetProgram(),
+			"isVertical"), 1);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D, bufferColourTex, 0);
+		glBindTexture(GL_TEXTURE_2D, postBufferColourTex);
+		screenQuad->Draw();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_DEPTH_TEST);
+}
+void Renderer::CombinePostProcessScene() {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	Shader* sceneShader = shaderList.getShader("processCombineShader");
+	BindShader(sceneShader);
+	modelMatrix.ToIdentity();
+	viewMatrix.ToIdentity();
+	projMatrix.ToIdentity();
+	UpdateShaderMatrices();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+	glUniform1i(glGetUniformLocation(
+		sceneShader->GetProgram(), "diffuseTex"), 0);
+	screenQuad->Draw();
+}
+//*/
 
 void Renderer::BuildNodeLists(SceneNode* from) {
 	if (frameFrustum.InsideFrustum(*from)) {
@@ -494,7 +655,12 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 		}
 		if (from->GetRenderPrior() == 1) {
 			unlitNodeList.push_back(from);
-		}else if (from->GetColour().w < 1.0f) {
+		}else if (from->GetRenderPrior() == 2) {
+			animatedCharacterList.push_back(from);
+		}else if (from->GetRenderPrior() == -1) {
+			terrain = from;
+		}
+		else if (from->GetColour().w < 1.0f) {
 			transparentNodeList.push_back(from);
 		}else {
 			nodeList.push_back(from);
@@ -518,20 +684,17 @@ void Renderer::SortNodeLists() {
 		unlitNodeList.end(),
 		SceneNode::CompareByCameraDistance);
 }
+
 void Renderer::DrawNodes(vector <SceneNode*> *RenderNodeList) {
 	for (const auto& i : *RenderNodeList) {
 		DrawNode(i);
 	}
 }
-
 void Renderer::DrawNode(SceneNode* n) {
 	if (n->GetMesh()) {
 		Shader* shader = n->GetShader();
 		BindShader(shader);
 		UpdateShaderMatrices();
-
-		glUniform1i(glGetUniformLocation(shader->GetProgram(),
-			"diffuseTex"), 0);
 
 		/*Matrix4 model = n->GetWorldTransform() *
 			Matrix4::Scale(n->GetModelScale());*/
@@ -542,16 +705,73 @@ void Renderer::DrawNode(SceneNode* n) {
 
 		glUniform4fv(glGetUniformLocation(shader->GetProgram(),
 			"colour"), 1, (float*)& n->GetColour());
+
+		glUniform1i(glGetUniformLocation(shader->GetProgram(),
+			"diffuseTex"), 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, n->GetTexture());
 
-		int useBump = n->GetBumpMap()==0?0:1;
-
 		glUniform1i(
-			glGetUniformLocation(shader->GetProgram(), "bumpTex"), useBump);
+			glGetUniformLocation(shader->GetProgram(), "bumpTex"), 1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, n->GetBumpMap());
 
+		n->Draw(*this);
+	}
+}
+
+void Renderer::DrawAnimatedNodes() {
+	for (const auto& i : animatedCharacterList) {
+		DrawCharacter(i);
+	}
+}
+void Renderer::DrawCharacter(SceneNode* n) {
+	BindShader(n->GetShader());
+	glUniform1i(glGetUniformLocation(n->GetShader()->GetProgram(),
+		"diffuseTex"), 0);
+	UpdateShaderMatrices();
+	Matrix4 model = n->GetWorldTransform();
+	model.SetScalingVector(n->GetModelScale());
+	glUniformMatrix4fv(glGetUniformLocation(n->GetShader()->GetProgram(),
+		"modelMatrix"), 1, false, model.values);
+	n->Draw(*this);
+}
+
+void Renderer::DrawTerrain(SceneNode* n) {
+	if (n->GetMesh()) {
+		Shader* shader = n->GetShader();
+		BindShader(shader);
+		UpdateShaderMatrices();
+
+		Matrix4 model = n->GetWorldTransform();
+		model.SetScalingVector(n->GetModelScale());
+		glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(),
+			"modelMatrix"), 1, false, model.values);
+
+		glUniform4fv(glGetUniformLocation(shader->GetProgram(),
+			"colour"), 1, (float*)& n->GetColour());
+
+		int count = 0;
+		std::vector<TextureWBump*>* textureList = n->GetTextureList();
+
+		for (auto& texture : *textureList) // access by reference to avoid copying
+		{
+			std::string text = "diffuseTex";
+			text += std::to_string(count);
+			glUniform1i(glGetUniformLocation(shader->GetProgram(),
+				text.c_str()), count*2);
+			glActiveTexture(GL_TEXTURE0 + count*2);
+			glBindTexture(GL_TEXTURE_2D, texture->getTexture());
+
+			text = "bumpTex";
+			text += std::to_string(count);
+			glUniform1i(glGetUniformLocation(shader->GetProgram(), 
+				text.c_str()), count * 2 + 1);
+			glActiveTexture(GL_TEXTURE0 + count*2 + 1);
+			glBindTexture(GL_TEXTURE_2D, texture->getBumpMap());
+			
+			count++;
+		}
 
 		n->Draw(*this);
 	}
@@ -562,4 +782,5 @@ void Renderer::ClearNodeLists() {
 	nodeList.clear(); 
 	unlitNodeList.clear();
 	lightNodeList.clear();
+	animatedCharacterList.clear();
 }

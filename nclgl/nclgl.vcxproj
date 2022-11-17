@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\Third Party\glad\glad.c" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraTrack.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="CubeRobot.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -38,6 +39,7 @@
     <ClCompile Include="MeshList.cpp" />
     <ClCompile Include="MeshMaterial.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="nodeCharacter.cpp" />
     <ClCompile Include="OGLRenderer.cpp" />
     <ClCompile Include="ParticleGenerator.cpp" />
     <ClCompile Include="Plane.cpp" />
@@ -46,10 +48,12 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderList.cpp" />
     <ClCompile Include="TextureList.cpp" />
+    <ClCompile Include="TextureWBump.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraTrack.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="CubeRobot.h" />
@@ -69,6 +73,7 @@
     <ClInclude Include="MeshList.h" />
     <ClInclude Include="MeshMaterial.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="nodeCharacter.h" />
     <ClInclude Include="OGLRenderer.h" />
     <ClInclude Include="ParticleGenerator.h" />
     <ClInclude Include="Plane.h" />
@@ -77,6 +82,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderList.h" />
     <ClInclude Include="TextureList.h" />
+    <ClInclude Include="TextureWBump.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />

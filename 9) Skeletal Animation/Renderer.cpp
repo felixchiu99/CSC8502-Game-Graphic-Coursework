@@ -79,6 +79,5 @@ void Renderer::RenderScene() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, matTextures[i]);
 		mesh->DrawSubMesh(i);
-		
 	}
 }

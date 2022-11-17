@@ -1,6 +1,5 @@
 #include "Camera.h"
 #include "Window.h"
-#include <algorithm>
 void Camera::UpdateCamera(float dt) {
 	if (usingFreeLook) {
 		pitch -= (Window::GetMouse()->GetRelativePosition().y);

@@ -1,7 +1,7 @@
 #pragma once
 #include "Matrix4.h"
 #include "Vector3.h"
-
+#include <algorithm>
 class Camera {
 public:
 	Camera(void) {
@@ -26,11 +26,24 @@ public:
 	Vector3 GetPosition() const { return position; }
 	void SetPosition(Vector3 val) { position = val; }
 	float GetYaw() const { return yaw; }
-	void SetYaw(float y) { yaw = y; }
+	void SetYaw(float y) { 
+		yaw = y;
+		if (yaw < 0) {
+			yaw += 360.0f;
+
+		}
+		if (yaw > 360.0f) {
+			yaw -= 360.0f;
+		}
+	}
 	float GetPitch() const { return pitch; }
-	void SetPitch(float p) { pitch = p; }
+	void SetPitch(float p) { 
+		pitch = p;
+		pitch = std::min(pitch, 90.0f);
+		pitch = std::max(pitch, -90.0f);
+	}
 	float GetRow() const { return row; }
-	void SetRow(float r) { pitch = r; }
+	void SetRow(float r) { row = r; }
 
 	float GetMoveSpeed() const { return moveSpeed; }
 

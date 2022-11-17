@@ -205,7 +205,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		(float)width / (float)height, 45.0f);
 	projMatrix = projMatrixOriginal;
 
-	camera = new Camera(-7.0f, 188.0f, Vector3(-168, 212, -1261));
+	camera = new Camera(-7.0f, 180, Vector3(-168, 212, -1261));
 	pointLights = new Light[LIGHT_NUM+1];
 
 	for (int i = 0; i < LIGHT_NUM; ++i) {
@@ -349,27 +349,78 @@ void Renderer::UpdateScene(float dt) {
 		MoveCamera(dt);
 }
 void Renderer::SetTrack() {
-	trackCheckpoint.push_back(Vector3(-168, 212, -1261));
-	trackCheckpoint.push_back(Vector3(-109.158, 245.07, 1001.02));
+	trackCheckpoint.push_back(
+		CameraTrack(
+			Vector3(-168, 212, -1261),
+			-7, 180, 3, 0.01
+	));
+	trackCheckpoint.push_back(
+		CameraTrack(
+			Vector3(-130, 245.07, 0),
+			-7, 180, 3, 0.01
+		));
+	trackCheckpoint.push_back(
+			CameraTrack(
+				Vector3(-109.158, 245.07, 1001.02),
+				-7, 222, 3, 0.002
+			));
+	trackCheckpoint.push_back(
+		CameraTrack(
+			Vector3(95.3522, 236.726, 2614.89),
+			-7, 330, 3, 0.005
+		));
+	trackCheckpoint.push_back(
+		CameraTrack(
+			Vector3(1690.98, 300, 1962.43),
+			-10, 3, 3, 0.01
+		));
+	trackCheckpoint.push_back(
+		CameraTrack(
+			Vector3(360, 500, -661),
+			-20, 100, 3, 0.01
+		));
+}
+float compareAngle(float target, float current) {
+	float currentOpposite;
+	if (current < 180)
+		currentOpposite = current + 180;
+	else
+		currentOpposite = current - 180;
+	if ((target - current) > 180)
+		return -(target - currentOpposite);
+	if ((target - current) < -180)
+		return -(target - currentOpposite);
+	return (target - current);
 }
 void Renderer::MoveCamera(float dt) {
-	float camSpeed = 3;
-	Vector3 targetPos = trackCheckpoint[nextIndex];
+	CameraTrack target = trackCheckpoint[nextIndex];
+
+	Vector3 targetPos = target.GetPosition();
 	Vector3 currentPos = camera->GetPosition();
 	Vector3 next = targetPos - currentPos; 
 	float dist = next.Length();
 	std::cout << next.Length() << std::endl;
 	next = next.Normalised();
-	if(dt<0.05)
-		next = next * camSpeed;
-	else
-		next = next * 0.01;
-	if(dist > 1)
+	next = next * target.GetPositionSpeed();
+	if(dist > (1 * target.GetPositionSpeed()))
 		camera->SetPosition(currentPos + next );
 	else {
 		if (nextIndex < trackCheckpoint.size() - 1)
 			nextIndex++;
+		else
+			nextIndex = 0;
 	}
+
+	float yawDiff = compareAngle(target.GetYaw(), camera->GetYaw());
+	float nextYaw = compareAngle(target.GetYaw(), camera->GetYaw())* target.GetViewSpeed();
+	if (yawDiff > fabs(nextYaw))
+		camera->SetYaw(camera->GetYaw() + nextYaw);
+
+
+	float pitchDiff = compareAngle(target.GetPitch(), camera->GetPitch());
+	float nextPitch = compareAngle(target.GetPitch(), camera->GetPitch()) * target.GetViewSpeed();
+	if (pitchDiff > fabs(nextPitch))
+		camera->SetPitch(camera->GetPitch() + nextPitch);
 }
 
 void Renderer::RenderScene() {

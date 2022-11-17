@@ -5,6 +5,7 @@
 #include "../nclgl/ShaderList.h"
 #include "../nclgl/TextureList.h"
 #include "../nclgl/MeshList.h"
+#include "../nclgl/CameraTrack.h"
 
 class Camera;
 class SceneNode;
@@ -112,6 +113,6 @@ protected:
 	// END scenenode related
 
 	//camera track
-	vector <Vector3> trackCheckpoint;
+	vector <CameraTrack> trackCheckpoint;
 	int nextIndex;
 };

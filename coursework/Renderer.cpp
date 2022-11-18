@@ -8,10 +8,12 @@
 
 const int LIGHT_NUM = 30;
 const int TREE_NUM = 100;
+const int ORB_NUM = 100;
+
 const float RENDER_DIST = 10000.0f;
 const int POST_PASSES = 10;
 
-Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
+Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	usingBlur = false;
 	usingFreeLook = false;
 	nextIndex = 0;
@@ -40,26 +42,26 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 			"combinefrag.glsl");
 		shaderList.addShader("skybox", "skyboxVertex.glsl", "skyboxFragmentDeferred.glsl");
 		shaderList.addShader("water", "reflectVertex.glsl", "reflectFragment.glsl");
-		shaderList.addShader("particle", "particleVertex.glsl", "particleFrag.glsl");
 		shaderList.addShader("man01", "SkinningVertex.glsl", "texturedFragment.glsl");
 		shaderList.addShader("processShader", "TexturedVertex.glsl", "processfrag.glsl");
-		shaderList.addShader("processCombineShader", "TexturedVertex.glsl","TexturedFragment.glsl");
+		shaderList.addShader("processCombineShader", "TexturedVertex.glsl", "TexturedFragment.glsl");
+		shaderList.addShader("lighted", "TexturedVertex.glsl", "TexturedFragmentLight.glsl");
 	}
 	{
 		textureList.addTexture("earth", SOIL_load_OGL_texture(
 			TEXTUREDIR"Barren Reds.JPG",
 			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
 			SOIL_load_OGL_texture(
-			TEXTUREDIR"Barren RedsDOT3.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+				TEXTUREDIR"Barren RedsDOT3.JPG",
+				SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
 		);
 
 		textureList.addTexture("treeStem", SOIL_load_OGL_texture(
 			TEXTUREDIR"tree_stem1_Base_Color.JPG",
 			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
 			SOIL_load_OGL_texture(
-			TEXTUREDIR"tree_stem1_Normal_OpenGL.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+				TEXTUREDIR"tree_stem1_Normal_OpenGL.JPG",
+				SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
 		);
 		SetTextureRepeating(textureList.getTexture("treeStem"), true);
 		SetTextureRepeating(textureList.getBumpMap("treeStem"), true);
@@ -68,8 +70,8 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 			TEXTUREDIR"Gravel01.PNG",
 			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
 			SOIL_load_OGL_texture(
-			TEXTUREDIR"Gravel01Norm.PNG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+				TEXTUREDIR"Gravel01Norm.PNG",
+				SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
 		);
 		SetTextureRepeating(textureList.getTexture("gravel"), true);
 		SetTextureRepeating(textureList.getBumpMap("gravel"), true);
@@ -94,18 +96,6 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		);
 		SetTextureRepeating(textureList.getTexture("sand"), true);
 		SetTextureRepeating(textureList.getBumpMap("sand"), true);
-
-
-		textureList.addTexture("leafTex", SOIL_load_OGL_texture(
-			TEXTUREDIR"Leaf_colour.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
-			NULL
-		);
-		textureList.addTexture("leafAlphaTex", SOIL_load_OGL_texture(
-			TEXTUREDIR"Leaf_alpha.JPG",
-			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
-			NULL
-		);
 
 
 		textureList.addTexture("brickTex", SOIL_load_OGL_texture(
@@ -147,7 +137,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 
 	Vector3 heightmapSize = heightMap->GetHeightmapSize();
 	//Vector3 heightmapSize = Vector3(4096, 255, 4096);
-	
+
 	{
 		root = new SceneNode();
 		unlitRoot = new SceneNode();
@@ -157,15 +147,14 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		heightMapScene->AddTexture(textureList.getTexturePair("gravel"));
 		heightMapScene->AddTexture(textureList.getTexturePair("grass"));
 		heightMapScene->SetTransform(Matrix4::Translation(
-			Vector3(heightmapSize* Vector3(-0.5f, 0.0f, -0.5f))));
+			Vector3(heightmapSize * Vector3(-0.5f, 0.0f, -0.5f))));
 		heightMapScene->SetBoundingRadius(heightmapSize.x * 2);
 		heightMapScene->SetRenderPrior(-1);
 		root->AddChild(heightMapScene);
 
 		SceneNode* r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 0.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("gravel"));
-		//SceneNode * r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("heightMap"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3( 0.0f, 100.0f, 0.0f)));
+			Vector3(0.0f, 100.0f, 0.0f)));
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetRenderPrior(1);
@@ -173,33 +162,40 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 
 		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3(0.0f, 100.0f, 0.0f)));
+			Vector3(-50.0f, 100.0f, 0.0f)));
+		r->SetBoundingRadius(RENDER_DIST);
+		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
+		root->AddChild(r);
+
+		r = new SceneNode(meshList.getMesh("cylinder"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
+		r->SetTransform(Matrix4::Translation(
+			Vector3(0.0f, 100.0f, -50.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		root->AddChild(r);
 
 		r = new SceneNode(meshList.getMesh("cone"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3( 50.0f, 100.0f, 0.0f)));
+			Vector3(50.0f, 100.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 		root->AddChild(r);
 
 		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("treeStem"));
-		r->AddTexture(textureList.getTexturePair("leafTex"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3( 0.0f, 220.0f, 0.0f)));
+			Vector3(0.0f, 220.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
 		root->AddChild(r);
 
-		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
+		r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("lighted"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3( 0.0f, 220.0f, 400.0f)));
+			Vector3(0.0f, 220.0f, 400.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
-		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
-		r->AddLight(Vector4 (1,0.7,0.7,1), 250);
-		//r->SetRenderPrior(1);
+		r->SetModelScale(Vector3(30, 30, 30));
+		r->AddLight(Vector4(1, 0.2, 0.2, 1), 250);
+		r->SetColour(Vector4(1, 0.2, 0.2, 1));
+		r->SetRenderPrior(1);
 		root->AddChild(r);
 		test = r;
 
@@ -214,16 +210,16 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 
 		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("processCombineShader"), textureList.getTexturePair("glass"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3(400.0f, (*heightMap).GetHeight(Vector3(400.0f,0, 400.0f), Vector3(0.5f, 0.0f, 0.5f)), 400.0f)));
+			Vector3(400.0f, (*heightMap).GetHeight(Vector3(400.0f, 0, 400.0f), Vector3(0.5f, 0.0f, 0.5f)), 400.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
 		r->AddLight(Vector4(0.5, 0.5, 1, 1), 250);
 		r->SetRenderPrior(1);
 		root->AddChild(r);
 
-		for(int i = 0; i < TREE_NUM; i++){
+		for (int i = 0; i < TREE_NUM; i++) {
 			r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("treeStem"));
-			Vector3 Translation = Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x / 2,  0, rand() % (int)heightmapSize.z - (int)heightmapSize.z / 2);
+			Vector3 Translation = Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x / 2, 0, rand() % (int)heightmapSize.z - (int)heightmapSize.z / 2);
 			r->SetTransform(Matrix4::Translation(
 				Vector3(Translation.x, (*heightMap).GetHeight(Translation, Vector3(-0.5f, 0.0f, -0.5f)), Translation.z)));
 			r->SetBoundingRadius(RENDER_DIST);
@@ -232,9 +228,18 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 				0.5f + (float)(rand() / (float)RAND_MAX),
 				0.5f + (float)(rand() / (float)RAND_MAX),
 				1);
-			if(rand() % 3)
+			if (rand() % 3)
 				r->AddLight(colour, 250);
 			r->SetColour(colour);
+			root->AddChild(r);
+		}
+		for (int i = 0; i < ORB_NUM; i++) {
+			r = new SceneNode(meshList.getMesh("sphere"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("grass"));
+			Vector3 Translation = Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x / 2, rand() % 300 + 400, rand() % (int)heightmapSize.z - (int)heightmapSize.z / 2);
+			r->SetTransform(Matrix4::Translation(
+				Translation));
+			r->SetBoundingRadius(RENDER_DIST);
+			r->SetModelScale(Vector3(20.0, 20.0, 20.0));
 			root->AddChild(r);
 		}
 
@@ -254,18 +259,18 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	projMatrix = projMatrixOriginal;
 
 	camera = new Camera(-7.0f, 180, Vector3(-168, 212, -1261));
-	pointLights = new Light[LIGHT_NUM+1];
+	pointLights = new Light[LIGHT_NUM + 1];
 
 	for (int i = 0; i < LIGHT_NUM; ++i) {
-		Light & l = pointLights[i];
-		l.SetPosition(Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x/2,
+		Light& l = pointLights[i];
+		l.SetPosition(Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x / 2,
 			150.0f,
 			rand() % (int)heightmapSize.z - (int)heightmapSize.z / 2));
-		
+
 		l.SetColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
-				0.5f + (float)(rand() / (float)RAND_MAX),
-				0.5f + (float)(rand() / (float)RAND_MAX),
-				1));
+			0.5f + (float)(rand() / (float)RAND_MAX),
+			0.5f + (float)(rand() / (float)RAND_MAX),
+			1));
 		l.SetRadius(250.0f + (rand() % 250));
 	}
 	directionLight = new Light_Directional(Vector3(200.0f, 200.0f, 200.0f),
@@ -274,7 +279,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	//directionLight->SetIntensity(0.7);
 	directionLight->SetIntensity(0.5);
 	std::cout << directionLight->GetRadius() << std::endl;
-	
+
 	if (shaderList.shaderLoadError()) {
 		return;
 	}
@@ -286,7 +291,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
 	glGenFramebuffers(1, &processFBO);//And do post processing in this
-	
+
 	GLenum buffers[2] = {
 		GL_COLOR_ATTACHMENT0 ,
 		GL_COLOR_ATTACHMENT1
@@ -309,7 +314,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 		GL_TEXTURE_2D, bufferDepthTex, 0);
 	glDrawBuffers(2, buffers);
-	
+
 	//And our post process colour texture ...
 	glGenTextures(1, &postBufferColourTex);
 	glBindTexture(GL_TEXTURE_2D, postBufferColourTex);
@@ -321,7 +326,7 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-			GL_FRAMEBUFFER_COMPLETE) {
+		GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
@@ -330,9 +335,9 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
 		GL_TEXTURE_2D, lightSpecularTex, 0);
 	glDrawBuffers(2, buffers);
-	
+
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-			GL_FRAMEBUFFER_COMPLETE) {
+		GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
 
@@ -375,9 +380,9 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA8;
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0,
-			format, width, height, 0, type, GL_UNSIGNED_BYTE, NULL);
+		format, width, height, 0, type, GL_UNSIGNED_BYTE, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -391,33 +396,33 @@ void Renderer::UpdateScene(float dt) {
 	man->SetTransform(Matrix4::Translation(
 		Vector3(Translation.x, (*heightMap).GetHeight(Translation, Vector3(-0.5f, 0.0f, -0.5f)), Translation.z)));
 
-	if (intensity >= 0.8) {
+	if (intensity >= 0.9) {
 		lightDim = true;
 	}
 	if (intensity <= 0) {
 		lightDim = false;
 	}
 	if (lightDim) {
-		intensity -= 0.0005; 
-		directionLight->SetPosition(directionLight->GetDirection() + Vector3(0.01, 0.02, 0.01));
+		intensity -= 0.0005;
+		directionLight->SetPosition(directionLight->GetDirection() + Vector3(0.02, 0, 0.01));
 		test->SetTransform(test->GetTransform() * Matrix4::Translation(
 			Vector3(0.5f, 0.01f, 0.0f)));
 	}
 	else {
 		intensity += 0.0005;
-		directionLight->SetPosition(directionLight->GetDirection() - Vector3(0.01, 0.02, 0.01));
+		directionLight->SetPosition(directionLight->GetDirection() - Vector3(0.02, 0, 0.01));
 		test->SetTransform(test->GetTransform() * Matrix4::Translation(
-			Vector3(-0.5f, 0.01f, 0.0f)));
+			Vector3(-0.5f, -0.01f, 0.0f)));
 	}
 	directionLight->SetIntensity(intensity);
 
 	root->Update(dt);
 
-	std::cout <<"pos "<< camera->GetPosition() << std::endl;
-	std::cout <<"Yaw "<< camera->GetYaw() << std::endl;
-	std::cout <<"Pitch "<< camera->GetPitch() << std::endl;
+	std::cout << "pos " << camera->GetPosition() << std::endl;
+	std::cout << "Yaw " << camera->GetYaw() << std::endl;
+	std::cout << "Pitch " << camera->GetPitch() << std::endl;
 
-	if(!usingFreeLook)
+	if (!usingFreeLook)
 		MoveCamera(dt);
 }
 void Renderer::SetTrack() {
@@ -425,17 +430,17 @@ void Renderer::SetTrack() {
 		CameraTrack(
 			Vector3(-168, 212, -1261),
 			-7, 180, 3, 0.01
-	));
+		));
 	trackCheckpoint.push_back(
 		CameraTrack(
 			Vector3(-130, 245.07, 0),
 			-7, 180, 3, 0.01
 		));
 	trackCheckpoint.push_back(
-			CameraTrack(
-				Vector3(-109.158, 245.07, 1001.02),
-				-7, 222, 3, 0.002
-			));
+		CameraTrack(
+			Vector3(-109.158, 245.07, 1001.02),
+			-7, 222, 3, 0.002
+		));
 	trackCheckpoint.push_back(
 		CameraTrack(
 			Vector3(95.3522, 236.726, 2614.89),
@@ -469,13 +474,13 @@ void Renderer::MoveCamera(float dt) {
 
 	Vector3 targetPos = target.GetPosition();
 	Vector3 currentPos = camera->GetPosition();
-	Vector3 next = targetPos - currentPos; 
+	Vector3 next = targetPos - currentPos;
 	float dist = next.Length();
 	std::cout << next.Length() << std::endl;
 	next = next.Normalised();
 	next = next * target.GetPositionSpeed();
-	if(dist > (1 * target.GetPositionSpeed()))
-		camera->SetPosition(currentPos + next );
+	if (dist > (1 * target.GetPositionSpeed()))
+		camera->SetPosition(currentPos + next);
 	else {
 		if (nextIndex < trackCheckpoint.size() - 1)
 			nextIndex++;
@@ -484,7 +489,7 @@ void Renderer::MoveCamera(float dt) {
 	}
 
 	float yawDiff = compareAngle(target.GetYaw(), camera->GetYaw());
-	float nextYaw = compareAngle(target.GetYaw(), camera->GetYaw())* target.GetViewSpeed();
+	float nextYaw = compareAngle(target.GetYaw(), camera->GetYaw()) * target.GetViewSpeed();
 	if (yawDiff > fabs(nextYaw))
 		camera->SetYaw(camera->GetYaw() + nextYaw);
 
@@ -563,7 +568,7 @@ void Renderer::DrawWater() {
 	Vector3 hSize = heightMap->GetHeightmapSize();
 
 	modelMatrix =
-		Matrix4::Translation( Vector3(0.0f, 21.5f, 0.0f)) *
+		Matrix4::Translation(Vector3(0.0f, 21.5f, 0.0f)) *
 		Matrix4::Scale(hSize * 0.5f) *
 		Matrix4::Rotation(-90, Vector3(1, 0, 0));
 
@@ -573,7 +578,7 @@ void Renderer::DrawWater() {
 }
 
 
-void Renderer::RenderNode(vector <SceneNode*> *RenderNodeList) {
+void Renderer::RenderNode(vector <SceneNode*>* RenderNodeList) {
 	viewMatrix = camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
@@ -632,23 +637,23 @@ void Renderer::DrawLights() {
 
 void Renderer::DrawPointLights() {
 	BindShader(pointlightShader);
-	
+
 	glUniform1i(glGetUniformLocation(
-			pointlightShader->GetProgram(), "depthTex"), 0);
+		pointlightShader->GetProgram(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
-	
+
 	glUniform1i(glGetUniformLocation(
-			pointlightShader->GetProgram(), "normTex"), 1);
+		pointlightShader->GetProgram(), "normTex"), 1);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
-	
+
 	glUniform3fv(glGetUniformLocation(pointlightShader->GetProgram(),
-			"cameraPos"), 1, (float*)& camera->GetPosition());
-	
+		"cameraPos"), 1, (float*)& camera->GetPosition());
+
 	glUniform2f(glGetUniformLocation(pointlightShader->GetProgram(),
-			"pixelSize"), 1.0f / width, 1.0f / height);
-	
+		"pixelSize"), 1.0f / width, 1.0f / height);
+
 	Matrix4 invViewProj = (projMatrix * viewMatrix).Inverse();
 	glUniformMatrix4fv(glGetUniformLocation(
 		pointlightShader->GetProgram(), "inverseProjView"),
@@ -656,7 +661,7 @@ void Renderer::DrawPointLights() {
 	UpdateShaderMatrices();
 
 	for (int i = 0; i < LIGHT_NUM; ++i) {
-		Light & l = pointLights[i];
+		Light& l = pointLights[i];
 		SetShaderLight(l);
 		lightSphere->Draw();
 	}
@@ -703,17 +708,17 @@ void Renderer::CombineBuffers() {
 	projMatrix.ToIdentity();
 	UpdateShaderMatrices();
 	glUniform1i(glGetUniformLocation(
-			combineShader->GetProgram(), "diffuseTex"), 0);
+		combineShader->GetProgram(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex);
-	
+
 	glUniform1i(glGetUniformLocation(
-			combineShader->GetProgram(), "diffuseLight"), 1);
+		combineShader->GetProgram(), "diffuseLight"), 1);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
 
 	glUniform1i(glGetUniformLocation(
-			combineShader->GetProgram(), "specularLight"), 2);
+		combineShader->GetProgram(), "specularLight"), 2);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
 
@@ -784,14 +789,17 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 		}
 		if (from->GetRenderPrior() == 1) {
 			unlitNodeList.push_back(from);
-		}else if (from->GetRenderPrior() == 2) {
+		}
+		else if (from->GetRenderPrior() == 2) {
 			animatedCharacterList.push_back(from);
-		}else if (from->GetRenderPrior() == -1) {
+		}
+		else if (from->GetRenderPrior() == -1) {
 			terrain = from;
 		}
 		else if (from->GetColour().w < 1.0f) {
 			transparentNodeList.push_back(from);
-		}else {
+		}
+		else {
 			nodeList.push_back(from);
 		}
 	}
@@ -814,7 +822,7 @@ void Renderer::SortNodeLists() {
 		SceneNode::CompareByCameraDistance);
 }
 
-void Renderer::DrawNodes(vector <SceneNode*> *RenderNodeList) {
+void Renderer::DrawNodes(vector <SceneNode*>* RenderNodeList) {
 	for (const auto& i : *RenderNodeList) {
 		DrawNode(i);
 	}
@@ -888,17 +896,17 @@ void Renderer::DrawTerrain(SceneNode* n) {
 			std::string text = "diffuseTex";
 			text += std::to_string(count);
 			glUniform1i(glGetUniformLocation(shader->GetProgram(),
-				text.c_str()), count*2);
-			glActiveTexture(GL_TEXTURE0 + count*2);
+				text.c_str()), count * 2);
+			glActiveTexture(GL_TEXTURE0 + count * 2);
 			glBindTexture(GL_TEXTURE_2D, texture->getTexture());
 
 			text = "bumpTex";
 			text += std::to_string(count);
-			glUniform1i(glGetUniformLocation(shader->GetProgram(), 
+			glUniform1i(glGetUniformLocation(shader->GetProgram(),
 				text.c_str()), count * 2 + 1);
-			glActiveTexture(GL_TEXTURE0 + count*2 + 1);
+			glActiveTexture(GL_TEXTURE0 + count * 2 + 1);
 			glBindTexture(GL_TEXTURE_2D, texture->getBumpMap());
-			
+
 			count++;
 		}
 
@@ -908,7 +916,7 @@ void Renderer::DrawTerrain(SceneNode* n) {
 
 void Renderer::ClearNodeLists() {
 	transparentNodeList.clear();
-	nodeList.clear(); 
+	nodeList.clear();
 	unlitNodeList.clear();
 	lightNodeList.clear();
 	animatedCharacterList.clear();

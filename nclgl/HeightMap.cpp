@@ -2,13 +2,17 @@
 #include <iostream>
 
 HeightMap::HeightMap(const std::string & name, Vector3 vertexScale ) {
-	int iWidth, iHeight, iChans;
+	int iHeight, iChans;
+	this->vertexScale = vertexScale;
 	unsigned char* data = SOIL_load_image(name.c_str(),
 		&iWidth, &iHeight, &iChans, 1);
 	if (!data) {
 		std::cout << "Heightmap can’t load file!\n";
 		return;
 	}
+
+	std::cout << iWidth << iHeight << std::endl;
+
 	numVertices = iWidth * iHeight;
 	numIndices = (iWidth - 1) * (iHeight - 1) * 6;
 	vertices = new Vector3[numVertices];
@@ -53,4 +57,11 @@ HeightMap::HeightMap(const std::string & name, Vector3 vertexScale ) {
 	heightmapSize.x = vertexScale.x * (iWidth - 1);
 	heightmapSize.y = vertexScale.y * 255.0f;//each height is a byte!
 	heightmapSize.z = vertexScale.z * (iHeight - 1);
+}
+float HeightMap::GetHeight(Vector3 pos, Vector3 worldOffset) {
+	pos = Vector3(pos.x + (GetHeightmapSize().x/2), 0 , pos.x + (GetHeightmapSize().z / 2));
+	pos = Vector3(pos.x / vertexScale.x, 0, pos.z / vertexScale.z);
+	int offset = ((int)pos.z * iWidth) + (int)pos.x ;
+	return vertices[offset].y;
+
 }

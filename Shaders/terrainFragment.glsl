@@ -26,16 +26,31 @@ void main(void) {
 	mat3 TBN = mat3(normalize(IN.tangent),
 		normalize(IN.binormal),
 		normalize(IN.normal));
-
-	vec3 normal = texture2D(bumpTex1, IN.texCoord).rgb * 2.0 - 1.0;
-	//vec3 normal = vec3(1, 1, 1);
-
-	//vec3 normal = mix(texture2D(bumpTex0, IN.texCoord).rgb,texture2D(bumpTex1, IN.texCoord).rgb,0.5) * 2.0 - 1.0;
+	vec4 sloped = texture2D(diffuseTex0, IN.texCoord);
+	vec4 flatTex = texture2D(diffuseTex3, IN.texCoord);
+	vec3 normal = texture2D(bumpTex3, IN.texCoord).rgb * 2.0 - 1.0;
+	float blendRange = 3;
+	float flatBlend = 0;
+	if (IN.worldPos.y < 30) {
+		flatTex = texture2D(diffuseTex1, IN.texCoord);
+		normal = texture2D(bumpTex1, IN.texCoord).rgb * 2.0 - 1.0;
+	}
+	else if (IN.worldPos.y < 45) {
+		flatBlend = (IN.worldPos.y - 30) / blendRange;
+		flatBlend = flatBlend > 1 ? 1 : flatBlend;
+		normal = mix(texture2D(bumpTex1, IN.texCoord).rgb * 2.0 - 1.0 , texture2D(bumpTex2, IN.texCoord).rgb * 2.0 - 1.0 , flatBlend);
+		flatTex = mix(texture2D(diffuseTex1, IN.texCoord),texture2D(diffuseTex2, IN.texCoord), flatBlend);
+	}else {
+		flatBlend = (IN.worldPos.y - 45) / blendRange;
+		flatBlend = flatBlend > 1 ? 1 : flatBlend;
+		normal = mix(texture2D(bumpTex2, IN.texCoord).rgb * 2.0 - 1.0, texture2D(bumpTex3, IN.texCoord).rgb * 2.0 - 1.0, flatBlend);
+		flatTex = mix(texture2D(diffuseTex2, IN.texCoord), texture2D(diffuseTex3, IN.texCoord), flatBlend);
+	}
+	
+	fragColour[0] = flatTex;
+	if (IN.normal.y < 0.74) {
+		fragColour[0] = sloped;
+	}
 	normal = normalize(TBN * normalize(normal));
-
-	//fragColour[0] = mix(texture2D(diffuseTex0, IN.texCoord), texture2D(diffuseTex1, IN.texCoord),0.5);
-	//fragColour[0] = vec4(normal.x, normal.y, normal.z, 1);
-	//fragColour[0] = vec4(1- IN.normal.y, IN.normal.y, 0, 1);
-	fragColour[0] = texture2D(diffuseTex1, IN.texCoord);
 	fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 }

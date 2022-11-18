@@ -13,7 +13,12 @@ public:
 	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader* shader = NULL, TextureWBump* textures = NULL);
 	~SceneNode(void);
 	
-	void SetTransform(const Matrix4 & matrix) { transform = matrix; }
+	void SetTransform(const Matrix4 & matrix) { 
+		transform = matrix; 
+		if (this->light != NULL) {
+			this->light->SetPosition(matrix.GetPositionVector());
+		}
+	}
 	const Matrix4 & GetTransform() const { return transform; }
 	Matrix4 GetWorldTransform() const { return worldTransform; }
 	

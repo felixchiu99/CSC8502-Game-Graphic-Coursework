@@ -8,7 +8,9 @@ public:
 	~HeightMap(void) {};
 	
 	Vector3 GetHeightmapSize() const { return heightmapSize; }
+	float GetHeight(Vector3 pos, Vector3 worldOffset);
 protected:
 	Vector3 heightmapSize;
-
+	Vector3 vertexScale;
+	int iWidth;
 };

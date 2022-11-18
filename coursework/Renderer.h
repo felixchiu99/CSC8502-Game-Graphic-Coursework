@@ -25,6 +25,9 @@ public:
 	};
 	void ToggleFreeLook() {
 		usingFreeLook = !usingFreeLook;
+		if (!usingFreeLook) {
+			GetClosestCameraPoint(camera->GetPosition());
+		}
 	};
 
 protected:
@@ -53,6 +56,20 @@ protected:
 
 	void SetTrack();
 	void MoveCamera(float dt);
+	void GetClosestCameraPoint(Vector3 camPos) {
+		int closestIndex = 0;
+		int minDist = NULL;
+		for (vector <CameraTrack>::iterator i = trackCheckpoint.begin(); i != trackCheckpoint.end(); ++i) {
+			Vector3 targetPos = (*i).GetPosition();
+			Vector3 next = targetPos - camPos;
+			float dist = next.Length();
+			if (minDist == NULL || dist < minDist) {
+				minDist = dist;
+				closestIndex = i - trackCheckpoint.begin();
+			}
+		}
+		nextIndex = closestIndex;
+	};
 
 	//toggle effect
 	bool usingBlur;
@@ -102,6 +119,7 @@ protected:
 	SceneNode* unlitRoot;
 	SceneNode* terrain;
 	SceneNode* test;
+	SceneNode* man;
 
 	Frustum frameFrustum;
 
@@ -115,4 +133,8 @@ protected:
 	//camera track
 	vector <CameraTrack> trackCheckpoint;
 	int nextIndex;
+
+	//
+	float intensity = 0.8;
+	bool lightDim = true;
 };

@@ -2,7 +2,7 @@
 
 uniform sampler2D diffuseTex;
 uniform samplerCube cubeTex;
-
+uniform float intensity;
 uniform vec3 cameraPos;
 
 in Vertex{
@@ -20,6 +20,8 @@ void main(void) {
 	
 	vec3 reflectDir = reflect(-viewDir, normalize(IN.normal));
 	vec4 reflectTex = texture(cubeTex, reflectDir);
+	reflectTex.rgb *= intensity;
 
 	fragColour = reflectTex + (diffuse * 0.25f);
+	fragColour.a = 0.8;
 }

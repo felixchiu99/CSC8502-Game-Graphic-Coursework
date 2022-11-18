@@ -6,7 +6,8 @@
 #include "../nclgl/nodeCharacter.h"
 #include <algorithm > //For std::sort ...
 
-const int LIGHT_NUM = 10;
+const int LIGHT_NUM = 30;
+const int TREE_NUM = 100;
 const float RENDER_DIST = 10000.0f;
 const int POST_PASSES = 10;
 
@@ -73,6 +74,17 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 		SetTextureRepeating(textureList.getTexture("gravel"), true);
 		SetTextureRepeating(textureList.getBumpMap("gravel"), true);
 
+		textureList.addTexture("grass", SOIL_load_OGL_texture(
+			TEXTUREDIR"Grass.PNG",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
+			SOIL_load_OGL_texture(
+				TEXTUREDIR"GrassNorm.PNG",
+				SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS)
+		);
+		SetTextureRepeating(textureList.getTexture("grass"), true);
+		SetTextureRepeating(textureList.getBumpMap("grass"), true);
+
+
 		textureList.addTexture("sand", SOIL_load_OGL_texture(
 			TEXTUREDIR"Sand.PNG",
 			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
@@ -101,6 +113,12 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS),
 			NULL
 		);
+		textureList.addTexture("glass", SOIL_load_OGL_texture(
+			TEXTUREDIR"stainedglass.tga",
+			SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0),
+			NULL
+		);
+		SetTextureRepeating(textureList.getTexture("glass"), true);
 		textureList.addTexture("skybox", SOIL_load_OGL_cubemap(
 			TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
 			TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
@@ -133,6 +151,16 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 	{
 		root = new SceneNode();
 		unlitRoot = new SceneNode();
+
+		SceneNode* heightMapScene = new SceneNode(heightMap, Vector4(1.0, 1.0, 1.0, 1.0), shaderList.getShader("terrain"), textureList.getTexturePair("earth"));
+		heightMapScene->AddTexture(textureList.getTexturePair("sand"));
+		heightMapScene->AddTexture(textureList.getTexturePair("gravel"));
+		heightMapScene->AddTexture(textureList.getTexturePair("grass"));
+		heightMapScene->SetTransform(Matrix4::Translation(
+			Vector3(heightmapSize* Vector3(-0.5f, 0.0f, -0.5f))));
+		heightMapScene->SetBoundingRadius(heightmapSize.x * 2);
+		heightMapScene->SetRenderPrior(-1);
+		root->AddChild(heightMapScene);
 
 		SceneNode* r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 0.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("gravel"));
 		//SceneNode * r = new SceneNode(meshList.getMesh("cube"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("heightMap"));
@@ -170,35 +198,55 @@ Renderer::Renderer(Window & parent) : OGLRenderer(parent) {
 			Vector3( 0.0f, 220.0f, 400.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
-		r->AddLight(Vector4 (1,0.5,0.5,1), 250);
+		r->AddLight(Vector4 (1,0.7,0.7,1), 250);
 		//r->SetRenderPrior(1);
 		root->AddChild(r);
+		test = r;
 
 		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("earth"));
 		r->SetTransform(Matrix4::Translation(
-			Vector3(100.0f, 220.0f, 0.0f)));
+			Vector3(100.0f, 40.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
 		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
 		r->AddLight(Vector4(0.5, 0.5, 1, 1), 250);
 		r->SetRenderPrior(1);
 		root->AddChild(r);
 
+		r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("processCombineShader"), textureList.getTexturePair("glass"));
+		r->SetTransform(Matrix4::Translation(
+			Vector3(400.0f, (*heightMap).GetHeight(Vector3(400.0f,0, 400.0f), Vector3(0.5f, 0.0f, 0.5f)), 400.0f)));
+		r->SetBoundingRadius(RENDER_DIST);
+		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
+		r->AddLight(Vector4(0.5, 0.5, 1, 1), 250);
+		r->SetRenderPrior(1);
+		root->AddChild(r);
+
+		for(int i = 0; i < TREE_NUM; i++){
+			r = new SceneNode(meshList.getMesh("tree"), Vector4(1.0, 1.0, 1.0, 1), shaderList.getShader("sceneNode"), textureList.getTexturePair("treeStem"));
+			Vector3 Translation = Vector3(rand() % (int)heightmapSize.x - (int)heightmapSize.x / 2,  0, rand() % (int)heightmapSize.z - (int)heightmapSize.z / 2);
+			r->SetTransform(Matrix4::Translation(
+				Vector3(Translation.x, (*heightMap).GetHeight(Translation, Vector3(-0.5f, 0.0f, -0.5f)), Translation.z)));
+			r->SetBoundingRadius(RENDER_DIST);
+			r->SetModelScale(Vector3(100.0, 100.0, 100.0));
+			Vector4 colour = Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
+				0.5f + (float)(rand() / (float)RAND_MAX),
+				0.5f + (float)(rand() / (float)RAND_MAX),
+				1);
+			if(rand() % 3)
+				r->AddLight(colour, 250);
+			r->SetColour(colour);
+			root->AddChild(r);
+		}
+
 		r = new nodeCharacter("Role_T.anm", "Role_T.mat", meshList.getMesh("man01"), shaderList.getShader("man01"));
 		r->SetTransform(Matrix4::Translation(
 			Vector3(100.0f, 220.0f, 0.0f)));
 		r->SetBoundingRadius(RENDER_DIST);
-		r->SetModelScale(Vector3(100.0, 100.0, 100.0));
-		r->AddLight(Vector4(0.5, 0.5, 1, 1), 250);
+		r->SetModelScale(Vector3(50.0, 50.0, 50.0));
+		r->AddLight(Vector4(0.5, 0, 0, 1), 250);
 		r->SetRenderPrior(2);
 		root->AddChild(r);
-
-		SceneNode* heightMapScene = new SceneNode(heightMap, Vector4(1.0, 1.0, 1.0, 1.0), shaderList.getShader("terrain"),  textureList.getTexturePair("earth"));
-		heightMapScene->AddTexture(textureList.getTexturePair("gravel"));
-		heightMapScene->SetTransform(Matrix4::Translation(
-			Vector3(heightmapSize* Vector3(-0.5f, 0.0f,-0.5f))));
-		heightMapScene->SetBoundingRadius(heightmapSize.x * 2);
-		heightMapScene->SetRenderPrior(-1);
-		root->AddChild(heightMapScene);
+		man = r;
 
 	}
 	projMatrixOriginal = Matrix4::Perspective(1.0f, 100000.0f,
@@ -339,6 +387,30 @@ void Renderer::UpdateScene(float dt) {
 	viewMatrix = camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
+	Vector3 Translation = man->GetTransform().GetPositionVector() + Vector3(0, 0, 1);
+	man->SetTransform(Matrix4::Translation(
+		Vector3(Translation.x, (*heightMap).GetHeight(Translation, Vector3(-0.5f, 0.0f, -0.5f)), Translation.z)));
+
+	if (intensity >= 0.8) {
+		lightDim = true;
+	}
+	if (intensity <= 0) {
+		lightDim = false;
+	}
+	if (lightDim) {
+		intensity -= 0.0005; 
+		directionLight->SetPosition(directionLight->GetDirection() + Vector3(0.01, 0.02, 0.01));
+		test->SetTransform(test->GetTransform() * Matrix4::Translation(
+			Vector3(0.5f, 0.01f, 0.0f)));
+	}
+	else {
+		intensity += 0.0005;
+		directionLight->SetPosition(directionLight->GetDirection() - Vector3(0.01, 0.02, 0.01));
+		test->SetTransform(test->GetTransform() * Matrix4::Translation(
+			Vector3(-0.5f, 0.01f, 0.0f)));
+	}
+	directionLight->SetIntensity(intensity);
+
 	root->Update(dt);
 
 	std::cout <<"pos "<< camera->GetPosition() << std::endl;
@@ -444,6 +516,8 @@ void Renderer::RenderScene() {
 	projMatrix = projMatrixOriginal;
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 
+	DrawWater();
+
 	RenderNode(&unlitNodeList);
 
 	if (usingBlur) {
@@ -460,7 +534,8 @@ void Renderer::DrawSkybox() {
 
 	BindShader(shaderList.getShader("skybox"));
 	UpdateShaderMatrices();
-
+	glUniform1f(glGetUniformLocation(shaderList.getShader("skybox")->GetProgram(),
+		"intensity"), intensity);
 	meshList.getMesh("quad")->Draw();
 
 	glDepthMask(GL_TRUE);
@@ -481,6 +556,9 @@ void Renderer::DrawWater() {
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureList.getTexture("skybox"));
+
+	glUniform1f(glGetUniformLocation(shaderList.getShader("water")->GetProgram(),
+		"intensity"), intensity);
 
 	Vector3 hSize = heightMap->GetHeightmapSize();
 
@@ -523,7 +601,7 @@ void Renderer::FillBuffers() {
 
 	DrawAnimatedNodes();
 
-	DrawWater();
+	//DrawWater();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
